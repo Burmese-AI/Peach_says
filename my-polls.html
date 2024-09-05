@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Polls</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+        }
+        .poll-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .poll-item {
+            background-color: white;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .poll-item h2 {
+            margin-top: 0;
+        }
+        .poll-item p {
+            margin: 5px 0;
+        }
+        .poll-item a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .poll-item a:hover {
+            text-decoration: underline;
+        }
+        .no-polls {
+            text-align: center;
+            color: #666;
+        }
+        .edit-btn {
+            display: inline-block;
+            margin-left: 10px;
+            color: #2196F3;
+            text-decoration: none;
+        }
+        .edit-btn:hover {
+            text-decoration: underline;
+        }
+        .delete-btn {
+            display: inline-block;
+            margin-left: 10px;
+            color: #F44336;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .delete-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+</head>
+<body>
+    <h1>My Polls</h1>
+    <div id="pollList"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const pollList = document.getElementById('pollList');
+            let polls = getAllPolls();
+
+            if (polls.length === 0) {
+                pollList.innerHTML = '<p class="no-polls">You haven\'t created any polls yet.</p>';
+            } else {
+                const ul = document.createElement('ul');
+                ul.className = 'poll-list';
+
+                polls.forEach(poll => {
+                    const li = document.createElement('li');
+                    li.className = 'poll-item';
+                    li.innerHTML = `
+                        <h2>${poll.question}</h2>
+                        <p>Type: ${poll.pollType}</p>
+                        <p>Options: ${poll.answers.join(', ')}</p>
+                        <a href="view-poll.html?id=${poll.id}">View Poll</a>
+                        <a href="create-poll.html?id=${poll.id}" class="edit-btn">Edit Poll</a>
+                        <span class="delete-btn" onclick="deletePoll('${poll.id}')">Delete Poll</span>
+                    `;
+                    ul.appendChild(li);
+                });
+
+                pollList.appendChild(ul);
+            }
+        });
+
+        function getAllPolls() {
+            const polls = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                try {
+                    const poll = JSON.parse(localStorage.getItem(key));
+                    if (poll && poll.question && poll.answers) {
+                        polls.push(poll);
+                    }
+                } catch (e) {
+                    console.error('Error parsing poll data:', e);
+                }
+            }
+            return polls;
+        }
+
+        function deletePoll(pollId) {
+            window.console.log("Poll delete function called");
+            if (confirm('Are you sure you want to delete this poll?')) {
+                localStorage.removeItem(pollId);
+                
+                location.reload(); // Refresh the page to show updated list
+            }
+        }
+    </script>
+</body>
+</html>

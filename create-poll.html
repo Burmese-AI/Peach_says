@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Poll</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        input, button, select {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        #answerOptions {
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create a Poll</h1>
+    <input type="text" id="question" placeholder="Enter your question">
+    
+    <select id="pollType" onchange="updatePollType()">
+        <option value="multipleChoice">Multiple Choice</option>
+        <option value="yesNo">Yes or No</option>
+        <option value="trueFalse">True or False</option>
+        <option value="inputAnswer">Input Answer</option>
+    </select>
+
+    <div id="multipleChoiceOptions">
+        <div id="answerOptions">
+            <input type="text" class="answer" placeholder="Answer option 1">
+            <input type="text" class="answer" placeholder="Answer option 2">
+        </div>
+        <button onclick="addAnswerOption()">Add Another Answer Option</button>
+    </div>
+
+    <div id="yesNoOptions" class="hidden">
+        <p>Options: Yes, No</p>
+    </div>
+
+    <div id="trueFalseOptions" class="hidden">
+        <p>Options: True, False</p>
+    </div>
+
+    <div id="inputAnswerOptions" class="hidden">
+        <p>Participants will provide their own answer</p>
+    </div>
+
+    <button onclick="createPoll()">Create Poll</button>
+
+    <script>
+        let editingPollId = null;
+    
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pollId = urlParams.get('id');
+            if (pollId) {
+                editingPollId = pollId;
+                loadExistingPoll(pollId);
+            }
+        });
+    
+        function loadExistingPoll(pollId) {
+            const pollData = JSON.parse(localStorage.getItem(pollId));
+            if (pollData) {
+                document.getElementById('question').value = pollData.question;
+                document.getElementById('pollType').value = pollData.pollType;
+                updatePollType();
+                if (pollData.pollType === 'multipleChoice') {
+                    const answerOptions = document.getElementById('answerOptions');
+                    answerOptions.innerHTML = '';
+                    pollData.answers.forEach((answer, index) => {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'answer';
+                        input.value = answer;
+                        input.placeholder = `Answer option ${index + 1}`;
+                        answerOptions.appendChild(input);
+                    });
+                }
+            }
+        }
+    
+        function updatePollType() {
+            const pollType = document.getElementById('pollType').value;
+            document.getElementById('multipleChoiceOptions').classList.add('hidden');
+            document.getElementById('yesNoOptions').classList.add('hidden');
+            document.getElementById('trueFalseOptions').classList.add('hidden');
+            document.getElementById('inputAnswerOptions').classList.add('hidden');
+    
+            document.getElementById(`${pollType}Options`).classList.remove('hidden');
+        }
+    
+        function addAnswerOption() {
+            const answerOptions = document.getElementById('answerOptions');
+            const newAnswer = document.createElement('input');
+            newAnswer.type = 'text';
+            newAnswer.className = 'answer';
+            newAnswer.placeholder = `Answer option ${answerOptions.children.length + 1}`;
+            answerOptions.appendChild(newAnswer);
+        }
+    
+        function createPoll() {
+            const question = document.getElementById('question').value;
+            const pollType = document.getElementById('pollType').value;
+            let answers = [];
+    
+            switch (pollType) {
+                case 'multipleChoice':
+                    answers = Array.from(document.getElementsByClassName('answer'))
+                        .map(input => input.value)
+                        .filter(value => value.trim() !== '');
+                    if (answers.length < 2) {
+                        alert('Please enter at least two answer options for multiple choice.');
+                        return;
+                    }
+                    break;
+                case 'yesNo':
+                    answers = ['Yes', 'No'];
+                    break;
+                case 'trueFalse':
+                    answers = ['True', 'False'];
+                    break;
+                case 'inputAnswer':
+                    answers = ['[User input]'];
+                    break;
+            }
+    
+            if (!question) {
+                alert('Please enter a question.');
+                return;
+            }
+    
+            const pollId = editingPollId || Date.now().toString(36) + Math.random().toString(36).substr(2);
+            const pollData = { id: pollId, question, answers, pollType };
+            
+            localStorage.setItem(pollId, JSON.stringify(pollData));
+    
+            window.location.href = `view-poll.html?id=${pollId}`;
+        }
+    </script>
+</body>
+</html>

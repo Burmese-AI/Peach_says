@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Poll</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1, h2 {
+            margin-bottom: 20px;
+        }
+        #options {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin: 10px 0;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            margin: 20px 0 10px;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #shareLink {
+            word-break: break-all;
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Poll Details</h1>
+    <h2 id="question"></h2>
+    <p id="pollType"></p>
+    <div id="options"></div>
+    <h3>Share this poll:</h3>
+    <p id="shareLink"></p>
+    <button onclick="copyShareLink()">Copy Share Link</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pollId = urlParams.get('id');
+            const pollData = JSON.parse(localStorage.getItem(pollId));
+
+            if (!pollData) {
+                document.body.innerHTML = '<h1>Poll not found</h1>';
+                return;
+            }
+
+            document.getElementById('question').textContent = pollData.question;
+            document.getElementById('pollType').textContent = `Poll Type: ${pollData.pollType}`;
+            
+            const optionsContainer = document.getElementById('options');
+
+            switch (pollData.pollType) {
+                case 'inputAnswer':
+                    const p = document.createElement('p');
+                    p.textContent = 'Participant will provide their own answer';
+                    optionsContainer.appendChild(p);
+                    break;
+                case 'multipleChoice':
+                    pollData.answers.forEach((answer) => {
+                        const label = document.createElement('label');
+                        label.appendChild(document.createTextNode(` ${answer}`));
+                        optionsContainer.appendChild(label);
+                    });
+                    break;
+                case 'yesNo':
+                case 'trueFalse':
+                    pollData.answers.forEach((answer) => {
+                        const label = document.createElement('label');
+                        const input = document.createElement('input');
+                        input.type = 'radio';
+                        input.name = 'answer';
+                        input.value = answer;
+                        label.appendChild(input);
+                        label.appendChild(document.createTextNode(` ${answer}`));
+                        optionsContainer.appendChild(label);
+                    });
+                    break;
+            }
+
+            const pollUrl = `${window.location.origin}/poll.html?id=${pollId}`;
+            document.getElementById('shareLink').textContent = pollUrl;
+        });
+
+        function copyShareLink() {
+            const shareLink = document.getElementById('shareLink').textContent;
+            navigator.clipboard.writeText(shareLink).then(() => {
+                alert('Share link copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
