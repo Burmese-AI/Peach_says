@@ -15,19 +15,17 @@
         h1, h2 {
             margin-bottom: 20px;
         }
-        #options {
+        #pollDetails, #pollResults {
             background-color: white;
             padding: 20px;
             border-radius: 5px;
+            margin-bottom: 20px;
         }
-        label {
-            display: block;
-            margin: 10px 0;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 5px;
-            margin-top: 5px;
+        #shareLink {
+            word-break: break-all;
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
         }
         button {
             display: block;
@@ -41,19 +39,23 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #shareLink {
-            word-break: break-all;
-            background-color: #e0e0e0;
-            padding: 10px;
-            border-radius: 5px;
+        ul {
+            list-style-type: none;
+            padding: 0;
         }
     </style>
 </head>
 <body>
     <h1>Poll Details</h1>
-    <h2 id="question"></h2>
-    <p id="pollType"></p>
-    <div id="options"></div>
+    <div id="pollDetails">
+        <h2 id="question"></h2>
+        <p id="pollType"></p>
+        <div id="options"></div>
+    </div>
+    <div id="pollResults">
+        <h2>Results</h2>
+        <div id="results"></div>
+    </div>
     <h3>Share this poll:</h3>
     <p id="shareLink"></p>
     <button onclick="copyShareLink()">Copy Share Link</button>
@@ -73,38 +75,58 @@
             document.getElementById('pollType').textContent = `Poll Type: ${pollData.pollType}`;
             
             const optionsContainer = document.getElementById('options');
+            pollData.answers.forEach((answer) => {
+                const p = document.createElement('p');
+                p.textContent = answer;
+                optionsContainer.appendChild(p);
+            });
 
-            switch (pollData.pollType) {
-                case 'inputAnswer':
-                    const p = document.createElement('p');
-                    p.textContent = 'Participant will provide their own answer';
-                    optionsContainer.appendChild(p);
-                    break;
-                case 'multipleChoice':
-                    pollData.answers.forEach((answer) => {
-                        const label = document.createElement('label');
-                        label.appendChild(document.createTextNode(` ${answer}`));
-                        optionsContainer.appendChild(label);
-                    });
-                    break;
-                case 'yesNo':
-                case 'trueFalse':
-                    pollData.answers.forEach((answer) => {
-                        const label = document.createElement('label');
-                        const input = document.createElement('input');
-                        input.type = 'radio';
-                        input.name = 'answer';
-                        input.value = answer;
-                        label.appendChild(input);
-                        label.appendChild(document.createTextNode(` ${answer}`));
-                        optionsContainer.appendChild(label);
-                    });
-                    break;
-            }
-
-            const pollUrl = `${window.location.origin}/Peach_says/poll.html?id=${pollId}`;
+            const pollUrl = `${window.location.origin}/poll.html?id=${pollId}`;
             document.getElementById('shareLink').textContent = pollUrl;
+
+            // Display results
+            const answers = JSON.parse(localStorage.getItem(`${pollId}_answers`)) || [];
+            const resultsContainer = document.getElementById('results');
+            
+            if (answers.length === 0) {
+                resultsContainer.textContent = 'No responses yet.';
+            } else {
+                switch (pollData.pollType) {
+                    case 'inputAnswer':
+                        displayInputAnswerResults(answers, resultsContainer);
+                        break;
+                    case 'multipleChoice':
+                    case 'yesNo':
+                    case 'trueFalse':
+                        displayChoiceResults(pollData.answers, answers, resultsContainer);
+                        break;
+                }
+            }
         });
+
+        function displayInputAnswerResults(answers, container) {
+            const ul = document.createElement('ul');
+
+            let count = 1;
+            answers.forEach(answer => {
+                const li = document.createElement('li');
+                li.textContent = `${count++}. ${answer}`;
+                ul.appendChild(li);
+            });
+            container.appendChild(ul);
+        }
+
+        function displayChoiceResults(options, answers, container) {
+            const resultCounts = {};
+            options.forEach(option => resultCounts[option] = 0);
+            answers.forEach(answer => resultCounts[answer]++);
+
+            for (const [option, count] of Object.entries(resultCounts)) {
+                const p = document.createElement('p');
+                p.textContent = `${option}: ${count} vote(s)`;
+                container.appendChild(p);
+            }
+        }
 
         function copyShareLink() {
             const shareLink = document.getElementById('shareLink').textContent;

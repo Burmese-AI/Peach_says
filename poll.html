@@ -51,7 +51,6 @@
             const urlParams = new URLSearchParams(window.location.search);
             const pollId = urlParams.get('id');
             const pollData = JSON.parse(localStorage.getItem(pollId));
-            const pollType = pollData.pollType;
 
             if (!pollData) {
                 document.body.innerHTML = '<h1>Poll not found</h1>';
@@ -60,8 +59,8 @@
 
             document.getElementById('question').textContent = pollData.question;
             const optionsContainer = document.getElementById('options');
-            
-            switch (pollType) {
+
+            switch (pollData.pollType) {
                 case 'multipleChoice':
                     pollData.answers.forEach((answer, index) => {
                     const label = document.createElement('label');
@@ -76,34 +75,31 @@
                     });
                     break;
                 case 'yesNo':
-                    
                     ['Yes', 'No'].forEach((option, index) => {
                         const label = document.createElement('label');
                         const input = document.createElement('input');
                         input.type = 'radio';
                         input.name = 'answer';
-                        input.value = index === 0 ? 1 : 0;
+                        input.value = index;
                         input.required = true;
                         label.appendChild(input);
                         label.appendChild(document.createTextNode(` ${option}`));
                         optionsContainer.appendChild(label);
                     });
                     break;
-
                 case 'trueFalse':
                     ['True', 'False'].forEach((option, index) => {
                         const label = document.createElement('label');
                         const input = document.createElement('input');
                         input.type = 'radio';
                         input.name = 'answer';
-                        input.value = index === 0 ? 1 : 0;
+                        input.value = index;
                         input.required = true;
                         label.appendChild(input);
                         label.appendChild(document.createTextNode(` ${option}`));
                         optionsContainer.appendChild(label);
                     });
                     break;
-
                 case 'inputAnswer':
                     const input = document.createElement('input');
                     input.type = 'text';
@@ -113,13 +109,23 @@
                     optionsContainer.appendChild(input);
                     break;
             }
-            
-            
 
             document.getElementById('pollForm').addEventListener('submit', (e) => {
                 e.preventDefault();
-                const selectedAnswer = document.querySelector('input[name="answer"]:checked').value;
-                alert(`Thank you for your response! You selected: ${pollData.answers[selectedAnswer]}`);
+                let selectedAnswer;
+                if (pollData.pollType === 'inputAnswer') {
+                    selectedAnswer = document.querySelector('input[name="answer"]').value;
+                } else {
+                    selectedAnswer = pollData.answers[document.querySelector('input[name="answer"]:checked').value];
+                }
+                
+                // Store the answer
+                const answers = JSON.parse(localStorage.getItem(`${pollId}_answers`)) || [];
+                answers.push(selectedAnswer);
+                localStorage.setItem(`${pollId}_answers`, JSON.stringify(answers));
+
+                alert('Thank you for your response!');
+                // window.location.href = `view-poll.html?id=${pollId}`;
             });
         });
     </script>

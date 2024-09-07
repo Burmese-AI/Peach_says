@@ -29,7 +29,7 @@
     </style>
 </head>
 <body>
-    <h1>Create a Poll</h1>
+    <h1 id="pageTitle">Create a Poll</h1>
     <input type="text" id="question" placeholder="Enter your question">
     
     <select id="pollType" onchange="updatePollType()">
@@ -59,20 +59,22 @@
         <p>Participants will provide their own answer</p>
     </div>
 
-    <button onclick="createPoll()">Create Poll</button>
+    <button id="submitButton" onclick="createOrUpdatePoll()">Create Poll</button>
 
     <script>
         let editingPollId = null;
-    
+
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const pollId = urlParams.get('id');
             if (pollId) {
                 editingPollId = pollId;
                 loadExistingPoll(pollId);
+                document.getElementById('pageTitle').textContent = 'Edit Poll';
+                document.getElementById('submitButton').textContent = 'Save Poll';
             }
         });
-    
+
         function loadExistingPoll(pollId) {
             const pollData = JSON.parse(localStorage.getItem(pollId));
             if (pollData) {
@@ -93,17 +95,17 @@
                 }
             }
         }
-    
+
         function updatePollType() {
             const pollType = document.getElementById('pollType').value;
             document.getElementById('multipleChoiceOptions').classList.add('hidden');
             document.getElementById('yesNoOptions').classList.add('hidden');
             document.getElementById('trueFalseOptions').classList.add('hidden');
             document.getElementById('inputAnswerOptions').classList.add('hidden');
-    
+
             document.getElementById(`${pollType}Options`).classList.remove('hidden');
         }
-    
+
         function addAnswerOption() {
             const answerOptions = document.getElementById('answerOptions');
             const newAnswer = document.createElement('input');
@@ -112,12 +114,12 @@
             newAnswer.placeholder = `Answer option ${answerOptions.children.length + 1}`;
             answerOptions.appendChild(newAnswer);
         }
-    
-        function createPoll() {
+
+        function createOrUpdatePoll() {
             const question = document.getElementById('question').value;
             const pollType = document.getElementById('pollType').value;
             let answers = [];
-    
+
             switch (pollType) {
                 case 'multipleChoice':
                     answers = Array.from(document.getElementsByClassName('answer'))
@@ -138,17 +140,17 @@
                     answers = ['[User input]'];
                     break;
             }
-    
+
             if (!question) {
                 alert('Please enter a question.');
                 return;
             }
-    
+
             const pollId = editingPollId || Date.now().toString(36) + Math.random().toString(36).substr(2);
             const pollData = { id: pollId, question, answers, pollType };
             
             localStorage.setItem(pollId, JSON.stringify(pollData));
-    
+
             window.location.href = `view-poll.html?id=${pollId}`;
         }
     </script>
